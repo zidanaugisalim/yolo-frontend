@@ -5,25 +5,136 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>YOLO Demo (XAMPP + FastAPI)</title>
   <style>
-    body{font-family:Arial;max-width:1000px;margin:20px auto;padding:0 12px}
-    .row{display:flex;gap:16px;flex-wrap:wrap}
-    .card{border:1px solid #ddd;border-radius:12px;padding:12px;flex:1;min-width:300px}
-    img,video{max-width:100%;border-radius:10px;border:1px solid #eee}
-    button{padding:10px 14px;border-radius:10px;border:1px solid #ccc;cursor:pointer}
-    input{padding:8px;border-radius:10px;border:1px solid #ccc;width:100%}
-    pre{background:#f6f6f6;border-radius:10px;padding:10px;overflow:auto}
-    .small{color:#555;font-size:13px}
-  </style>
+  :root{
+    --bg:#0b1020;
+    --card:#111a33;
+    --muted:#a7b0d4;
+    --text:#eef1ff;
+    --border:rgba(255,255,255,.12);
+    --accent:#6ea8fe;
+    --ok:#3ddc97;
+    --warn:#ffcc66;
+    --err:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans";
+    background: radial-gradient(1200px 800px at 20% -10%, rgba(110,168,254,.25), transparent 60%),
+                radial-gradient(900px 600px at 90% 10%, rgba(61,220,151,.18), transparent 55%),
+                var(--bg);
+    color:var(--text);
+  }
+  .wrap{max-width:1080px;margin:26px auto;padding:0 14px}
+  .title{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h2{margin:0;font-size:26px;letter-spacing:.2px}
+  .sub{color:var(--muted);margin:6px 0 0 0;font-size:13.5px;line-height:1.4}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 12px;border:1px solid var(--border);
+    border-radius:999px;background:rgba(255,255,255,.04);
+    color:var(--muted);font-size:13px;
+  }
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+  .dot.ok{background:var(--ok)}
+  .dot.err{background:var(--err)}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+  @media(min-width:900px){
+    .grid-2{grid-template-columns: 1fr 1fr;}
+    .grid-3{grid-template-columns: 1.15fr .85fr;}
+  }
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+  input[type="text"], input[type="url"]{
+    width:100%;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,.18);
+    color:var(--text);
+    outline:none;
+  }
+  input[type="file"]{
+    width:100%;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px dashed var(--border);
+    background:rgba(0,0,0,.12);
+    color:var(--muted);
+  }
+  button{
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(110,168,254,.16);
+    color:var(--text);
+    cursor:pointer;
+    font-weight:600;
+  }
+  button:hover{background:rgba(110,168,254,.24)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .muted{color:var(--muted);font-size:13px;line-height:1.4}
+  .section-title{margin:0 0 10px 0;font-size:16px}
+  img, video{
+    max-width:100%;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,.18);
+  }
+  .two{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:900px){.two{grid-template-columns:1fr 1fr}}
+  pre{
+    background:rgba(0,0,0,.25);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px;
+    overflow:auto;
+    max-height:420px;
+    color:#d9e1ff;
+    font-size:12.5px;
+  }
+  .kpis{
+    display:flex;gap:10px;flex-wrap:wrap;margin-top:10px
+  }
+  .kpi{
+    padding:8px 10px;border-radius:12px;border:1px solid var(--border);
+    background:rgba(0,0,0,.16);
+    color:var(--muted);font-size:13px
+  }
+  .kpi b{color:var(--text)}
+  .footer{margin:18px 0 28px 0;color:var(--muted);font-size:12.5px}
+  a{color:var(--accent)}
+</style>
+
 </head>
 <body>
-  <h2>YOLOv8 Object Detection (XAMPP Website + FastAPI Backend)</h2>
-  <p class="small">
-    Backend harus jalan di <b>http://127.0.0.1:8000</b>. Website ini jalan di <b>http://localhost/yolo-demo</b>.
-  </p>
+  <div class="wrap">
+  <div class="title">
+    <div>
+      <h2>YOLOv8 Object Detection Demo</h2>
+      <p class="sub">
+        Frontend: Vercel • Backend: FastAPI + YOLOv8 (via Cloudflare Tunnel).
+        Upload gambar untuk deteksi + lihat JSON. Kamera opsional untuk demo.
+      </p>
+    </div>
+
+    <div class="pill" id="statusPill">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">status: idle</span>
+    </div>
+  </div>
+
 
   <div class="card">
     <label>Backend URL (biarkan default):</label>
-    <input id="api" value="https://stickers-republican-dreams-instrumentation.trycloudflare.com" />
+    <input id="api" value="https://nested-forty-entire-constitutional.trycloudflare.com/" />
     <p class="small">Kalau port backend beda, ganti di sini.</p>
   </div>
 
@@ -67,30 +178,81 @@
     const outJson = document.getElementById("outJson");
     const runBtn = document.getElementById("run");
 
+    function setStatus(type, text){
+  const dot = document.getElementById("statusDot");
+  const t = document.getElementById("statusText");
+  dot.className = "dot" + (type ? " " + type : "");
+  t.textContent = text;
+}
+
+function applyApiFromQuery(){
+  const p = new URLSearchParams(location.search);
+  const api = p.get("api");
+  if(api){
+    apiEl.value = api.replace(/\/$/, "");
+  }
+}
+applyApiFromQuery();
+
     function baseUrl() {
       return apiEl.value.replace(/\/$/, "");
     }
 
     runBtn.onclick = async () => {
-      if (!fileEl.files[0]) return alert("Pilih gambar dulu!");
-      outJson.textContent = "Loading...";
+  if (!fileEl.files[0]) return alert("Pilih gambar dulu!");
+  if (!apiEl.value) return alert("Backend URL belum diisi!");
 
-      const f = fileEl.files[0];
+  const base = baseUrl();
+  const f = fileEl.files[0];
 
-      // JSON
-      const form1 = new FormData();
-      form1.append("file", f);
-      const r1 = await fetch(baseUrl() + "/predict-json", { method: "POST", body: form1 });
-      const j = await r1.json();
-      outJson.textContent = JSON.stringify(j, null, 2);
+  try{
+    runBtn.disabled = true;
+    setStatus("", "status: checking backend...");
+    outJson.textContent = "Checking backend...";
 
-      // Image
-      const form2 = new FormData();
-      form2.append("file", f);
-      const r2 = await fetch(baseUrl() + "/predict-image", { method: "POST", body: form2 });
-      const blob = await r2.blob();
-      outImg.src = URL.createObjectURL(blob);
-    };
+    // ping backend
+    const ping = await fetch(base + "/", { method: "GET" });
+    if(!ping.ok) throw new Error("Backend tidak merespon dengan OK.");
+
+    setStatus("ok", "status: processing...");
+    outJson.textContent = "Loading JSON...";
+
+    // JSON
+    const form1 = new FormData();
+    form1.append("file", f);
+    const r1 = await fetch(base + "/predict-json", { method: "POST", body: form1 });
+    if(!r1.ok) throw new Error("predict-json gagal: " + r1.status);
+    const j = await r1.json();
+    outJson.textContent = JSON.stringify(j, null, 2);
+
+    // ringkasan deteksi (kalau elemen ringkasan ada)
+    const total = j.total ?? j.num_detections ?? (j.predictions ? j.predictions.length : 0);
+    const classes = (j.predictions || []).map(x => x.class_name).filter(Boolean);
+    const uniq = [...new Set(classes)];
+    const kpi1 = document.getElementById("kpiTotal");
+    const kpi2 = document.getElementById("kpiClasses");
+    if(kpi1) kpi1.innerHTML = `<b>${total}</b> detections`;
+    if(kpi2) kpi2.innerHTML = `<b>${uniq.length ? uniq.join(", ") : "-"}</b> classes`;
+
+    // Image
+    const form2 = new FormData();
+    form2.append("file", f);
+    const r2 = await fetch(base + "/predict-image", { method: "POST", body: form2 });
+    if(!r2.ok) throw new Error("predict-image gagal: " + r2.status);
+    const blob = await r2.blob();
+    outImg.src = URL.createObjectURL(blob);
+
+    setStatus("ok", "status: done ✅");
+  }catch(e){
+    console.error(e);
+    setStatus("err", "status: error ❌");
+    outJson.textContent = "ERROR: " + (e?.message || e);
+    alert("Gagal. Cek status backend URL / tunnel. Detail ada di panel JSON.");
+  }finally{
+    runBtn.disabled = false;
+  }
+};
+
 
     // ===== camera (simple realtime) =====
     const vid = document.getElementById("vid");
